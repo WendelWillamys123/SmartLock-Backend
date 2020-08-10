@@ -1,7 +1,7 @@
 const Organization = require('../../models/Organization');
 const Group = require('../../models/Group');
 const Lock = require('../../models/Lock');
-const LocalFisico = require('../../models/LocalFisico');
+const PhysicalLocal = require('../../models/PhysicalLocal');
 const Admin = require('../../models/Admin');
 const User = require('../../models/User');
 const Role = require('../../models/Role');
@@ -47,11 +47,12 @@ module.exports = {
 
         try {
             const organization = await Organization.findByIdAndRemove(_id);
-            await LocalFisico.deleteMany ({organization: {$in: [_id]}});
+            await PhysicalLocal.deleteMany ({organization: {$in: [_id]}});
             await Group.deleteMany ({organization: {$in: [_id]}});
             await Lock.deleteMany ({organization: {$in: [_id]}});
             await User.deleteMany ({organization: {$in: [_id]}});
             await Admin.deleteMany ({organization: {$in: [_id]}});
+            await Role.deleteMany ({organization: {$in: [_id]}});
            
 
             return response.send({error: false, message: 'Organization deleted'});
