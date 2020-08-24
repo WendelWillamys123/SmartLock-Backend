@@ -36,6 +36,12 @@ const OrganizationSchema = new mongoose.Schema
              ref: 'PhysicalLocal',
              default: null
             }],
+
+        roles: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+            default: null
+            }],
         
         users: [{
             type: mongoose.Schema.Types.ObjectId,

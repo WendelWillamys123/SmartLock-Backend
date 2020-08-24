@@ -8,15 +8,17 @@ module.exports = {
 
     async store(request, response){
         const {name, _id = null, Localtype = "group"} = request.body;
-        var {owner} = request.owner;
+        var owner = request.headers.owner;
         var NewGroup;
+
+        console.log({name, owner})
 
         try{
 
             //Se o grupo esta sendo criado em um local fisico, em um grupo ou na raiz
 
             if(Localtype==="group"){
-                const holderGroup = await Group.findOne({ _id: _id }).populated('groups').populate('physicalLocal');
+                const holderGroup = await Group.findOne({ _id: _id }).populate('groups').populate('physicalLocal');
 
                 if(holderGroup!==null){
                     var exist= false;
@@ -72,10 +74,19 @@ module.exports = {
                 } else {
                     //cria grupo na raiz
 
-                    owner = await Organization.findById(owner);
+                    owner = await Organization.findById(owner).populate('groups');
+                    var exist = false;
+
+                    owner.groups.map(group => {
+                        if(group.name===name){
+                            exist = true;
+                        }
+                    })
+
+                    if(exist===false){
 
                     NewGroup = await Group.create({
-                        name,
+                        name: name,
                         holder: [],
                         groups: [],
                         locks: [],
@@ -85,11 +96,15 @@ module.exports = {
                         organization: owner._id,
                     });
 
-                    await Organization.findByIdAndUpdate({ _id: owner._id}, { $push: {groups: NewGroup._id}}, {new: true});
+                    await Organization.findByIdAndUpdate({ _id: NewGroup.organization}, { $push: {groups: NewGroup._id}}, {new: true});
+                    return response.send(NewGroup);
+                    
+                    }  return response.status(400).send({error: 'A group with name informed already exist'})
+
                 }
             
             } else if(Localtype==="physicalLocal"){
-                    const holderLocal = await PhysicalLocal.findById(_id).populated('groups');
+                    const holderLocal = await PhysicalLocal.findById(_id).populate('groups');
     
                     if(holderLocal!==null){
                         var exist= false;
@@ -131,6 +146,7 @@ module.exports = {
             }
 
         } catch(error){
+            console.log(error)
             if(NewGroup._id!==null && NewGroup._id!==undefined) await Group.findByIdAndDelete(NewGroup._id);
             return response.status(400).send({error: 'Create a new group failed'});
         }
@@ -138,9 +154,9 @@ module.exports = {
     },
 
     async index(request, response){
-        const { owner } = request.owner;
+        const owner = request.headers.owner;
         try{
-            const groups = await Group.find({organization: owner});
+            const groups = await Group.find();
             return response.send({groups});
         }catch(error){
             return response.status(400).send({error: 'Groups not found'});
@@ -159,46 +175,65 @@ module.exports = {
     },
 
     async update(request, response){
-        const {_id, name, groups, locks, physicalLocal, roles } = request.body;
-        
+        const {_id, name} = request.body;
+        const owner = request.headers.owner;
+
         try{
-            const group = await Group.findById(_id).populate('holder');
+            group = await Group.findById(_id);
 
-            var holderGroup;
+            if(group.holder !== null){
+      
+                group = await Group.findById(_id).populate('holder');
 
-            group.holder.map(item => {
-                item.groups.map(el => {
-                    if (group._id === el) holderGroup = item;
-                })
-            })
-            
-            holderGroup = await Group.findById(holderGroup._id).populate('groups');
-
-            if(name !== group.name){
                 var exists = false;
-                
-                holderGroup.groups.map(group => {
-                    if(group.name===name){
-                        exist = true;
-                    }
-                })
 
-                if (exists===false) {
+                Promise.all(group.holder.map(async item => {
+                    var holder = await Group.findById(item._id).populate('groups');
+                    holder.groups.map(el => {
+                        if (group._id === el._id) if (el.name === name) exists = true;
+                        
+                    })
+                }));
+    
+                    if (exists===false) {
+                        group = await Group.findByIdAndUpdate(_id, {name}, {new: true});
+                        return response.send(group);
+    
+                   } else return response.status(400).send({error: 'A group with email informed already exist'})
+                 
+            } else {
+
+                const organization = await Organization.findById(owner).populate('groups');
+
+                if(name !== group.name){
+                    var exists = false;
+                    
+                  organization.groups.map(item => {
+                        if (item.holder === null) 
+                            if(item.name === name) exists = true;
+                    
+                });
+
+                    if (exists===false) {
+                        group = await Group.findByIdAndUpdate(_id, {name, groups, locks, physicalLocal, roles}, {new: true});
+                        return response.send({group});
+    
+                   } else return response.status(400).send({error: 'A group with email informed already exist'})
+                } else {
                     group = await Group.findByIdAndUpdate(_id, {name, groups, locks, physicalLocal, roles}, {new: true});
                     return response.send({group});
-
-               } else return response.status(400).send({error: 'A group with email informed already exist'})
-            } else {
-                group = await Group.findByIdAndUpdate(_id, {name, groups, locks, physicalLocal, roles}, {new: true});
-                return response.send({group});
-            } 
+                } 
+            }
+            
         } catch(error){
+            console.log(error)
             return response.status(400).send({error: 'Update of group data failed'})
         }
     },
 
     async destroy(request, response){
-        const {_id} = request.headers;
+        const {_id} = request.body;
+
         var group;
         try{
             group = await Group.findByIdAndRemove(_id);
@@ -210,6 +245,7 @@ module.exports = {
 
             return response.send({error: false, message: 'Group deleted', group: group.name});
         } catch(error){
+            console.log(error)
             return response.status(400).send({error: 'Failed delete group'});
         }
     },

@@ -2,8 +2,6 @@ const Admin = require('../../models/Admin');
 const User = require('../../models/User');
 const Organization = require('../../models/Organization');
 
-const bcrypt = require("bcryptjs");
-
 module.exports = {
     async store(request, response){ 
         var { _id = null, name = null, email = null, password, organization = null } = request.body;
@@ -80,11 +78,11 @@ module.exports = {
     },
 
     async show(request, response){
-        const { _id } = request.body;
+        const { _id } = request.headers;
 
         try{
             const adminsBusca = await Admin.findById(_id).populate('organização');
-            return response.send({adminsBusca});
+            return response.send(adminsBusca);
         } catch(error){
             return response.status(400).send({error: 'Admin not found'})
         }
@@ -117,7 +115,7 @@ module.exports = {
     },
 
     async destroy(request, response){
-        const { _id } = request.body;
+        const { _id } = request.headers;
         var admin;
 
         try{

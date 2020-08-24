@@ -20,11 +20,11 @@ module.exports = {
     },
 
     async show(request, response){
-        const { _id } = request.body;
-
+        const { _id } = request.headers;
+        
         try{
             const organizationBusca = await Organization.findById(_id).populate('users').populate('admins');
-            return response.send({organizationBusca});
+            return response.send(organizationBusca);
         } catch(error){
             return response.status(400).send({error: 'Organization not found'});
         }
@@ -38,6 +38,7 @@ module.exports = {
             const organization = await Organization.findByIdAndUpdate(_id, {name, email, password: hash}, {new: true});
             return response.json({organization});
         } catch(error){
+            console.log(error)
             return response.status(400).send({error: 'Organization update failed'})    
         }
     },

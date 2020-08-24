@@ -39,6 +39,7 @@ routes.delete('/groups/delete', GroupController.destroy);
 
 routes.post('/locks/create', LockController.store);
 routes.get('/locks/search', LockController.show);
+routes.get('/locks/search/name', LockController.findName);
 routes.get('/locks', LockController.index);
 routes.put('/locks/update', LockController.update);
 routes.delete('/locks/delete', LockController.destroy);
@@ -55,6 +56,7 @@ routes.delete('/physicalLocals/delete', PhysicalLocalController.destroy);
 //Rotes of roles
 
 routes.post('/roles/create', RoleController.store);
+routes.post('/roles/assign', RoleController.assign);
 routes.get('/roles/search', RoleController.show);
 routes.get('/roles', RoleController.index);
 routes.put('/roles/update', RoleController.update);

@@ -92,5 +92,5 @@ router.post('/register',  async (request, response) => {
     });
  
 
-    module.exports = app => app.use('/auth', router);
+    module.exports = app => app.use('/app', router);
 

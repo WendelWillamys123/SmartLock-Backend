@@ -1,7 +1,6 @@
 const User = require('../../models/User');
 const Organization = require('../../models/Organization');
 const Admin = require('../../models/Admin');
-const { findById } = require('../../models/User');
 
 module.exports = {
     async store(request, response){ 
@@ -70,23 +69,21 @@ module.exports = {
     },
    
     async index(request, response){
-        const {owner} = request.owner;
-
+        const owner = request.headers.owner;
         try{
            const users = await User.find({organization: owner});
            return response.send({users});
-
         } catch(error){
             return response.status(400).send({error: 'Users not found'});
         }
     },
 
     async show(request, response){
-        const { _id } = request.body;
+        const { _id } = request.headers;
 
         try{
             const usersBusca = await User.findById(_id);
-            return response.send({usersBusca});
+            return response.send(usersBusca);
         } catch(error){
             return response.status(400).send({error: 'User not found'})
         }
@@ -112,12 +109,13 @@ module.exports = {
             } 
 
         } catch(error){
+            console.log(error)
             return response.status(400).send({error: 'Update of user data failed'})
         }
     },
 
     async destroy(request, response){
-        const { _id } = request.body;
+        const { _id } = request.headers;
         var user;
 
         try{

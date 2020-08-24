@@ -7,12 +7,12 @@ const Organization = require('../../models/Organization');
 module.exports = {
 
     async store(request, response){
-        const {name, _id = null, longitude, latitude} = request.body;
+        const {name, _id, longitude, latitude} = request.body;
         var NewLocal;
 
         try{
-            const holderGroup = await Group.findOne({ _id });
-
+            const holderGroup = await Group.findById(_id);
+         
             if(holderGroup!==null){
                 var exist= false;
 
@@ -25,7 +25,7 @@ module.exports = {
                 if(exist===false){
                     
                     var newHolder = holderGroup.holder;
-                    newHolder.push (holderGroup._id);
+                    newHolder.push(holderGroup._id);
 
                     const location = {
                         type: 'Point',
@@ -46,24 +46,26 @@ module.exports = {
                     newPhysicalLocal.push(NewLocal._id);
 
                     await Group.findByIdAndUpdate({ _id: holderGroup._id}, { physicalLocal: newPhysicalLocal}, {new: true});
-                    await Organization.findByIdAndUpdate({ _id: holderGroup.organization}, { $push: {physicalLocal: newPhysicalLocal._id}}, {new: true});
-                    return response.send ({NewLocal});
+                    await Organization.findByIdAndUpdate({ _id: holderGroup.organization}, { $push: {physicalLocal: NewLocal._id}}, {new: true});
+                    return response.send(NewLocal);
 
                 } else return response.status(400).send({error: 'A physical local with name informed already exist'});
             } else return response.status(400).send({error: 'Source group not found'});
         
         } catch(error){
-            if(NewLocal._id!==null && NewLocal._id!==undefined) await PhysicalLocal.findByIdAndDelete(NewLocal._id);
+            if(NewLocal._id!==null) await PhysicalLocal.findByIdAndDelete(NewLocal._id);
+            if(NewLocal._id!==undefined) await PhysicalLocal.findByIdAndDelete(NewLocal._id);
+
             return response.status(400).send({error: 'Create a new physical local failed'});
         }
    
     }, 
 
     async index(request, response){
-        const {owner} = request.owner;
+        const {owner} = request.headers;
         try{
-            const physicalLocal = await PhysicalLocal.find({organization: owner});
-            return response.send({physicalLocal});
+            const physicalLocal = await PhysicalLocal.find({organization: owner}).populate('holder').populate('locks').populate('roles').populate('groups');
+            return response.send(physicalLocal);
 
         } catch(error){
             return response.status(400).send({error: 'Physical locals not found'});
@@ -75,10 +77,23 @@ module.exports = {
         
         try{
             const physicalLocal = await PhysicalLocal.findById(_id).populate('groups').populate('locks').populate('holder');
-            return response.send({physicalLocal});
+            return response.send(physicalLocal);
 
         } catch(error){
             return response.status(400).send({error: 'Physical local not found'});
+        }
+    },
+
+    async findName (request, response){
+        const {name, owner} = request.headers;
+                
+        try{
+            const data = await PhysicalLocal.find({organization: owner});
+            const physicalLocals = data.filter( local =>  (local.name.includes(name)));
+            return response.send(physicalLocals);
+
+        } catch(error){
+            return response.status(400).send({error: 'Physical local(s) not found'});
         }
     },
 
@@ -109,12 +124,12 @@ module.exports = {
 
                 if (exists===false) {
                     physicalLocal = await Group.findByIdAndUpdate(_id, {name, groups, locks, roles}, {new: true});
-                    return response.send({physicalLocal});
+                    return response.send(physicalLocal);
 
                } else return response.status(400).send({error: 'A physical local with email informed already exist'})
             } else {
                 physicalLocal = await Group.findByIdAndUpdate(_id, {name, groups, locks, roles}, {new: true});
-                return response.send({physicalLocal});
+                return response.send(physicalLocal);
             } 
         } catch(error){
             return response.status(400).send({error: 'Update of physical local data failed'})

@@ -38,6 +38,7 @@ module.exports = {
                             NewLock = await Lock.create({
                                 name,
                                 holder: newHolder,
+                                holderPhysicalLocal: null,
                                 organization: holderGroup.organization
                             });
                         }
@@ -48,7 +49,7 @@ module.exports = {
                         await Group.findByIdAndUpdate({ _id: holderGroup._id}, { locks: newContent}, {new: true});
                         await Organization.findByIdAndUpdate({ _id: holderGroup.organization}, { $push: {locks: NewLock._id}}, {new: true});
                             
-                        return response.send({NewLock});
+                        return response.send(NewLock);
                         
                     } else return response.status(400).send({error: 'A lock with name informed already exist'});
                 } else return response.status(400).send({error: 'Source group not found'});
@@ -70,15 +71,16 @@ module.exports = {
                         NewLock = await Lock.create({
                             name,
                             holder: holderLocal.holder,
-                            holderPhysicalLocal: holderLocal._id
+                            holderPhysicalLocal: holderLocal._id,
+                            organization: holderLocal.organization
                         });
 
                         let newContent = holderLocal.locks;
                         newContent.push(NewLock._id);
                         await PhysicalLocal.findByIdAndUpdate({ _id: holderLocal._id}, { locks: newContent}, {new: true});
-                        await Organization.findByIdAndUpdate({ _id: holderGroup.organization}, { $push: {locks: NewLock._id}}, {new: true});
+                        await Organization.findByIdAndUpdate({ _id: holderLocal.organization}, { $push: {locks: NewLock._id}}, {new: true});
 
-                        return response.send({NewLock});
+                        return response.send(NewLock);
                     } else return response.status(400).send({error: 'A lock with name informed already exist'});
                 } else return response.status(400).send({error: 'Source physical local not found'});
             }
@@ -90,11 +92,11 @@ module.exports = {
     },
 
     async index (request, response){
-        const {owner} = request.owner;
+        const owner = request.headers.owner;
 
         try{
-            const lock = await Lock.find({organization: owner});
-            return response.send({lock});
+            const lock = await Lock.find({organization: owner}).populate('holder').populate('holderPhysicalLocal').populate('roles');
+            return response.send(lock);
 
         } catch(error){
             return response.status(400).send({error: 'Locks not found'});
@@ -102,11 +104,24 @@ module.exports = {
     },
     
     async show (request, response){
-        const {_id} = request.query;
+        const {_id} = request.body;
         
         try{
             const lock = await Lock.findById(_id);
-            return response.send({lock});
+            return response.send(lock);
+
+        } catch(error){
+            return response.status(400).send({error: 'Locks not found'});
+        }
+    },
+
+    async findName (request, response){
+        const {name, owner} = request.headers;
+                
+        try{
+            const data = await Lock.find({organization: owner});
+            const locks = data.filter( lock =>  (lock.name.includes(name)));
+            return response.send(locks);
 
         } catch(error){
             return response.status(400).send({error: 'Locks not found'});
@@ -118,7 +133,7 @@ module.exports = {
         
         try{
             const lock = await Lock.findByIdAndUpdate (_id, {name}, {new: true});
-            return response.send({lock});
+            return response.send(lock);
 
         } catch(error){
             return response.status(400).send({error: 'Update of lock data failed'});

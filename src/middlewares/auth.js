@@ -16,9 +16,9 @@ module.exports = (request, response, next) => {
 
     jwt.verify(token, authConfig.secret, (err, decoded) => {
         if(err) return response.status(401).send({error: 'Token invalid'});
-
-        request.owner = decoded.id;
-        request.admin = decoded.idAdmin;
+        
+        request.headers.owner = decoded.id;
+        request.headers.admin = decoded.idAdmin;
         return next();
     })
 }

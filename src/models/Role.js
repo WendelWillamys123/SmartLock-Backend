@@ -8,13 +8,15 @@ const RoleSchema = new mongoose.Schema({
         },
 
         times: [{
-            start: Number,
-            end: Number,
+            start: {
+                hours: Number,
+                minutes: Number
+            },
+            end: {
+                hours: Number,
+                minutes: Number
+            },
             day: [Boolean],
-            options: {
-                track: Boolean,
-                direct: Boolean
-            }
         }],
 
         organization: {
