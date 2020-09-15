@@ -98,20 +98,12 @@ module.exports = {
     },
 
     async update(request, response){
-        const {_id, name, groups, locks, roles } = request.body;
-        
+        const {_id, name } = request.body;
+
         try{
-            const physicalLocal = await PhysicalLocal.findById(_id).populate('holder');
-
-            var holderGroup;
-
-            physicalLocal.holder.map(item => {
-                item.physicalLocal.map(el => {
-                    if (physicalLocal._id === el) holderGroup = item;
-                })
-            })
-            
-            holderGroup = await Group.findById(holderGroup._id).populate('physicalLocal');
+            var physicalLocal = await PhysicalLocal.findById(_id).populate('holder');
+            var id = physicalLocal._id;
+            var holderGroup = await Group.findOne({physicalLocal: id}).populate('physicalLocal');
 
             if(name !== physicalLocal.name){
                 var exists = false;
@@ -123,12 +115,12 @@ module.exports = {
                 })
 
                 if (exists===false) {
-                    physicalLocal = await Group.findByIdAndUpdate(_id, {name, groups, locks, roles}, {new: true});
+                    physicalLocal = await PhysicalLocal.findByIdAndUpdate(_id, {name}, {new: true});
                     return response.send(physicalLocal);
 
                } else return response.status(400).send({error: 'A physical local with email informed already exist'})
             } else {
-                physicalLocal = await Group.findByIdAndUpdate(_id, {name, groups, locks, roles}, {new: true});
+                physicalLocal = await Group.findByIdAndUpdate(_id, {name}, {new: true});
                 return response.send(physicalLocal);
             } 
         } catch(error){
@@ -141,7 +133,7 @@ module.exports = {
     
         try{
             const physicalLocal = await PhysicalLocal.findByIdAndRemove(_id);
-            await Group.findOneAndUpdate({physicalLocal: {$in: [_id]}}, {$pullAll: {physicalLocal: [_id]}}, {new: true});
+            await Group.updateMany({physicalLocal: {$in: [_id]}}, {$pullAll: {physicalLocal: [_id]}}, {new: true});
             await Organization.findOneAndUpdate({groups: {$in: [_id]}}, {$pullAll: {groups: [_id]}}, {new: true});
             await Group.deleteMany ({holderPhysicalLocal: {$in: [_id]}});
             await Lock.deleteMany ({holderPhysicalLocal: {$in: [_id]}});
@@ -149,6 +141,7 @@ module.exports = {
             return response.send({error: false, message: 'Physical local deleted', PhysicalLocal: physicalLocal.name});
 
         }   catch(error){
+            console.log(error)
             return response.status(400).send({error: 'Failed delete physical local'});
         }
     },

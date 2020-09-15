@@ -11,6 +11,12 @@ const LockSchema = new mongoose.Schema({
             ref: 'Group'
         }],
 
+        roles: [{ 
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+            default: null
+        }],
+
         holderPhysicalLocal: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'PhysicalLocal'

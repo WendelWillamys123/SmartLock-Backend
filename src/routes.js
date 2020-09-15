@@ -31,6 +31,7 @@ routes.delete('/users/delete', UserController.destroy);
 
 routes.post('/groups/create', GroupController.store);
 routes.get('/groups/search', GroupController.show);
+routes.get('/groups/search/name', GroupController.findName);
 routes.get('/groups', GroupController.index);
 routes.put('/groups/update', GroupController.update);
 routes.delete('/groups/delete', GroupController.destroy);
@@ -48,6 +49,7 @@ routes.delete('/locks/delete', LockController.destroy);
 
 routes.post('/physicalLocals/create', PhysicalLocalController.store);
 routes.get('/physicalLocals/search', PhysicalLocalController.show);
+routes.get('/physicalLocals/search/name', PhysicalLocalController.findName);
 routes.get('/physicalLocals', PhysicalLocalController.index);
 routes.put('/physicalLocals/update', PhysicalLocalController.update);
 routes.delete('/physicalLocals/delete', PhysicalLocalController.destroy);

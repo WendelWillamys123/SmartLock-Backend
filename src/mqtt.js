@@ -10,7 +10,27 @@ const PhysicalLocal = require("./models/PhysicalLocal");
 
     client.on( "connect", () => {
             client.subscribe( "checkAccess", (error) => {
-                    if (error !== true);
+                    if (error !== true){
+                            /*setTimeout
+                        (
+                            () =>
+                            {
+                                client.publish
+                                (
+                                    "checkAccess",
+                                    JSON.stringify
+                                    (
+                                        {
+                                            _id: "5f446e2e91663ee6746084f9",
+                                            pin: "31FC.866V.7D9S-95"
+                                        }
+                                    )
+                                );
+                            },
+                            2000
+                        );*/
+                    }
+                    
                 });
         });
 
@@ -25,18 +45,16 @@ const PhysicalLocal = require("./models/PhysicalLocal");
             
             if (user !== null)
             {
-                const lock = await Lock.findById (_id);
+                const lock = await Lock.findById(_id);
                 const groups = await Group.find({_id: {$in: lock.holder}});
-                const physicalLocal = await PhysicalLocal.find({_id: {$in: lock.holder}});
-                
+                const physicalLocal = await PhysicalLocal.find({_id: lock.holderPhysicalLocal});
+
                 var allGroups = [];
                 
-                groups.map((group) => {
-                    allGroups[group.holder.length] = group;
-                });
-
-                physicalLocal.map((local) => {allGroups[local.holder.length] = local;});
+                allGroups.push(...groups);
+                if(physicalLocal !== null || physicalLocal !== undefined ) allGroups.push(...physicalLocal);
             
+
                 var holderNames = [];
                 var roleIds = [];
 
@@ -44,27 +62,34 @@ const PhysicalLocal = require("./models/PhysicalLocal");
                     holderNames[index] = group.name;
                     
                     group.roles.map((role) => {
-                        if (roleIds.includes(role) === false){
-                            roleIds.push(role);
+                        if (roleIds.includes(role.toString()) === false){
+                            roleIds.push(role.toString());
                         }
                     });
                 });
 
-                if (roleIds.length !== 0 && user.roles.some ((value) => roleIds.indexOf(value) >= 0)) {
+                if (roleIds.length !== 0 && user.roles.some ((value) => roleIds.indexOf(value.toString()) >= 0)) {
                     var currentTime = new Date;
                     currentTime = {
-                        hour: (currentTime.getHours()*60)+currentTime.getMinutes (),
+                        hour: (currentTime.getHours ()*60)+currentTime.getMinutes (),
                         day: currentTime.getDay()
                     };
 
                     const roles = await Role.find({_id: {$in: roleIds}});
+                    
                     var usedTimes = [];
                     var usedRoles = [];
                     
+                    
                     roles.map((role) => {
                         role.times.map((time) => {
-                            if (currentTime.hour >= time.start && currentTime.hour <= time.end && time.day [currentTime.day] === true) {
-                                usedTimes.push (time);
+                            
+                            var start = (time.start.hours*60)+time.start.minutes;
+                            var end = (time.end.hours*60)+time.end.minutes;
+
+                            if (currentTime.hour >= start && currentTime.hour <= end && time.day [currentTime.day] === true) {
+                               
+                                usedTimes.push(time);
                                 usedRoles.push (role.name);
                             }
                         })
@@ -72,12 +97,15 @@ const PhysicalLocal = require("./models/PhysicalLocal");
                 }
 
                 if (usedTimes.length > 0){
+                    console.log(true);
                     client.publish("respondAccess", _id+" true");
                 } else {
+                    console.log(false);
                     client.publish("respondAccess", "false");
                 }
 
             } else {
+                console.log(false);
                 client.publish("respondAccess", "false");
             }
         }

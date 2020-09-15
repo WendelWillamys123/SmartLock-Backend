@@ -4,7 +4,8 @@ const Admin = require('../../models/Admin');
 
 module.exports = {
     async store(request, response){ 
-        var { _id = null, name = null, email = null, pin = [], registry = null, roles = [], organization = null } = request.body;
+        var { _id = null, name = null, email = null, pin = [], registry = null, roles = [] } = request.body;
+        var organization = request.headers.owner;
         var newUser;
 
         try{
@@ -12,7 +13,7 @@ module.exports = {
             if(_id !== null){
                 const admin = await Admin.findById(_id);
                 
-                const user = await User.findOne({ email: admin.email });
+                const user = await User.findOne({organization: organization, email: admin.email });
                
                 if(admin === null){
                     return response.status(400).send({error: 'Source admin not found'});
@@ -41,7 +42,7 @@ module.exports = {
                 
                 if(!OwnerOrganization) return response.status(400).send({error: 'Owner oganization not found'});
                 else {
-                    const user = await User.findOne({ email });
+                    const user = await User.findOne({organization: OwnerOrganization._id, email: email });
 
                     if(!user){
 
@@ -51,10 +52,10 @@ module.exports = {
                             pins: pin,
                             registry,
                             roles,
-                            organization: organization
+                            organization: OwnerOrganization._id
                         });
 
-                    await Organization.findByIdAndUpdate({ _id: organization}, {$push: {users: newUser._id}}, {new: true});
+                    await Organization.findByIdAndUpdate({ _id: OwnerOrganization._id}, {$push: {users: newUser._id}}, {new: true});
                     return response.send(newUser);
 
                     } else {

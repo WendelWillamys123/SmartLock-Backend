@@ -43,7 +43,7 @@ module.exports = {
 
         try{
             const roles = await Role.find({organization: owner});
-            return response.send({roles});
+            return response.send(roles);
         } catch(error){
             return response.status(400).send({error: 'Roles not found'})
         }
@@ -111,7 +111,7 @@ module.exports = {
         try {
             const role = await Role.findById(_id);
             if(role!==null){
-
+              
                 if(type === "groups"){
                     const toWhom = await Group.findByIdAndUpdate({_id: componentID}, { $push: {roles: role._id}}, {new: true});
                     await Group.updateMany({holder: {$in: [componentID]}}, { $push: {roles: role}}, {new: true});
@@ -130,13 +130,14 @@ module.exports = {
                     return response.send({error: false, message: `The ${toWhom.name} lock received the role ${role.name}`})   
                 }
                 if(type === "users"){
-                    const toWhom = await Lock.findByIdAndUpdate({_id: componentID}, { $push: {roles: role._id}}, {new: true});
+                    const toWhom = await User.findByIdAndUpdate({_id: componentID}, { $push: {roles: role._id}}, {new: true});
+                    console.log(toWhom);
                     return response.send({error: false, message: `User ${toWhom.name} received the role ${role.name}`})    
                 }
         }else return response.status(400).send({error: true, message: "Role not found"})
             
         } catch (error) {
-            //verificar se a role não foi adicionada ao(s) componente(s)/user
+           console.log(error);
             return response.status(400).send({error: 'Could not assign the role'})
         }
     }

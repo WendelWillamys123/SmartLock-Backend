@@ -8,6 +8,7 @@ const RoleSchema = new mongoose.Schema({
         },
 
         times: [{
+            name: String,
             start: {
                 hours: Number,
                 minutes: Number

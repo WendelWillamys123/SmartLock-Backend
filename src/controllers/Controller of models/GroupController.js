@@ -156,8 +156,8 @@ module.exports = {
     async index(request, response){
         const owner = request.headers.owner;
         try{
-            const groups = await Group.find();
-            return response.send({groups});
+            const groups = await Group.find({organization: owner});
+            return response.send(groups);
         }catch(error){
             return response.status(400).send({error: 'Groups not found'});
         }
@@ -171,6 +171,19 @@ module.exports = {
             return response.send({group});
         } catch(error){
             return response.status(400).send({error: 'Group not found'})
+        }
+    },
+
+    async findName (request, response){
+        const {name, owner} = request.headers;
+                
+        try{
+            const data = await Group.find({organization: owner});
+            const groups = data.filter( local =>  (local.name.includes(name)));
+            return response.send(groups);
+
+        } catch(error){
+            return response.status(400).send({error: 'Physical local(s) not found'});
         }
     },
 

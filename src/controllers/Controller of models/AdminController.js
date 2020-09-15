@@ -4,7 +4,8 @@ const Organization = require('../../models/Organization');
 
 module.exports = {
     async store(request, response){ 
-        var { _id = null, name = null, email = null, password, organization = null } = request.body;
+        var { _id = null, name = null, email = null, password } = request.body;
+        const organization = request.headers.owner;
          var newAdmin; 
         try{
 
@@ -41,16 +42,17 @@ module.exports = {
                 if(!OwnerOrganization) return response.status(400).send({error: 'Owner oganization not found'});
                 
                 else {
-                const admin = await Admin.findOne({ email });
+                const admin = await Admin.findOne({organization: organization, email: email });
 
                     if(!admin){
                         newAdmin = await Admin.create({
                             name,
                             email,
                             password,
-                            organization
+                            organization: OwnerOrganization._id
                         });
 
+                        console.log( organization, newAdmin);
                     await Organization.findByIdAndUpdate({ _id: organization}, {$push: {admins: newAdmin._id}}, {new: true});
                     return response.send(newAdmin);
 
@@ -61,6 +63,7 @@ module.exports = {
             }
                 
         } catch(error){
+            
             if(newAdmin._id!==null && newAdmin._id!==undefined) await Admin.findByIdAndDelete(newAdmin._id);
             return response.status(400).send({error: 'Create a new admin failed'});
         }

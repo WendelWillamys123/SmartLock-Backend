@@ -31,6 +31,7 @@ module.exports = {
                             NewLock = await Lock.create({
                                 name,
                                 holder: newHolder,
+                                roles: holderGroup.roles,
                                 holderPhysicalLocal: holderGroup.holderPhysicalLocal,
                                 organization: holderGroup.organization
                             });
@@ -38,6 +39,7 @@ module.exports = {
                             NewLock = await Lock.create({
                                 name,
                                 holder: newHolder,
+                                roles: holderGroup.roles,
                                 holderPhysicalLocal: null,
                                 organization: holderGroup.organization
                             });
@@ -71,6 +73,7 @@ module.exports = {
                         NewLock = await Lock.create({
                             name,
                             holder: holderLocal.holder,
+                            roles: holderLocal.roles,
                             holderPhysicalLocal: holderLocal._id,
                             organization: holderLocal.organization
                         });
@@ -107,7 +110,7 @@ module.exports = {
         const {_id} = request.body;
         
         try{
-            const lock = await Lock.findById(_id);
+            const lock = await Lock.findById(_id).populate('holder');
             return response.send(lock);
 
         } catch(error){
@@ -147,11 +150,14 @@ module.exports = {
             if(Localtype==="group"){
                 const lock = await Lock.findByIdAndDelete(_id);
                 await Group.findOneAndUpdate({locks: {$in: [_id]}}, {$pullAll: {locks: [_id]}}, {new: true});
+                await Organization.findOneAndUpdate({locks: {$in: [_id]}}, {$pullAll: {locks: [_id]}}, {new: true});
+
                 return response.send({error: false, message: 'Lock deleted', Lock: `${lock.name}`});
             } 
             if(Localtype==="physicalLocal"){
                 const lock = await Lock.findByIdAndDelete(_id);
                 await PhysicalLocal.findOneAndUpdate({locks: {$in: [_id]}}, {$pullAll: {locks: [_id]}}, {new: true});
+                await Organization.findOneAndUpdate({locks: {$in: [_id]}}, {$pullAll: {locks: [_id]}}, {new: true});
             
                 return response.send({error: false, message: 'Lock deleted', Lock: `${lock.name}`});
             }
