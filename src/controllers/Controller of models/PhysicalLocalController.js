@@ -133,10 +133,20 @@ module.exports = {
     
         try{
             const physicalLocal = await PhysicalLocal.findByIdAndRemove(_id);
-            await Group.updateMany({physicalLocal: {$in: [_id]}}, {$pullAll: {physicalLocal: [_id]}}, {new: true});
-            await Organization.findOneAndUpdate({groups: {$in: [_id]}}, {$pullAll: {groups: [_id]}}, {new: true});
-            await Group.deleteMany ({holderPhysicalLocal: {$in: [_id]}});
-            await Lock.deleteMany ({holderPhysicalLocal: {$in: [_id]}});
+            await Group.findOneAndUpdate({physicalLocal: {$in: [_id]}}, {$pullAll: {physicalLocal: [_id]}}, {new: true});
+            await Organization.findOneAndUpdate({physicalLocal: {$in: [_id]}}, {$pullAll: {physicalLocal: [_id]}}, {new: true});
+            const groups = await Group.find({holderPhysicalLocal: _id});
+            const locks = await Lock.find({holderPhysicalLocal: _id});
+
+            Promise.all(locks.map(async lock => {
+                await Lock.findByIdAndDelete(lock._id);
+                await Organization.findOneAndUpdate({locks: {$in: [lock._id]}}, {$pullAll: {locks: [lock._id]}}, {new: true});
+            }))
+
+            Promise.all(groups.map(async group => {
+                await Lock.findByIdAndDelete(group._id);
+                await Organization.findOneAndUpdate({groups: {$in: [group._id]}}, {$pullAll: {groups: [group._id]}}, {new: true});
+            }))
 
             return response.send({error: false, message: 'Physical local deleted', PhysicalLocal: physicalLocal.name});
 
