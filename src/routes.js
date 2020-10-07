@@ -62,6 +62,7 @@ routes.post('/roles/assign', RoleController.assign);
 routes.get('/roles/search', RoleController.show);
 routes.get('/roles', RoleController.index);
 routes.put('/roles/update', RoleController.update);
+routes.post('/roles/newShedule', RoleController.newShedule);
 routes.delete('/roles/delete', RoleController.destroy);
 
 module.exports = routes;

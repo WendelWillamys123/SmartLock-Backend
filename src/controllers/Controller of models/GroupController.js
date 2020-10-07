@@ -11,8 +11,6 @@ module.exports = {
         var owner = request.headers.owner;
         var NewGroup;
 
-        console.log({name, owner})
-
         try{
 
             //Se o grupo esta sendo criado em um local fisico, em um grupo ou na raiz
@@ -156,7 +154,7 @@ module.exports = {
     async index(request, response){
         const owner = request.headers.owner;
         try{
-            const groups = await Group.find({organization: owner});
+            const groups = await Group.find({organization: owner}).populate('physicalLocal').populate('holderPhysicalLocal').populate('holder').populate('locks').populate('roles').populate('groups');
             return response.send(groups);
         }catch(error){
             return response.status(400).send({error: 'Groups not found'});
@@ -245,13 +243,14 @@ module.exports = {
     },
 
     async destroy(request, response){
-        const {_id} = request.body;
+        const {_id} = request.headers;
 
         var group;
         try{
             group = await Group.findByIdAndRemove(_id);
             await Group.findOneAndUpdate({groups: {$in: [_id]}}, {$pullAll: {groups: [_id]}}, {new: true});
-            await Organization.findOneAndUpdate({groups: {$in: [_id]}}, {$pullAll: {groups: [_id]}}, {new: true}); 
+            await Organization.findOneAndUpdate({groups: {$in: [_id]}}, {$pullAll: {groups: [_id]}}, {new: true});          
+            await PhysicalLocal.findOneAndUpdate({groups: {$in: [_id]}}, {$pullAll: {groups: [_id]}}, {new: true});
             await PhysicalLocal.deleteMany({holder: {$in: [_id]}});
             await Group.deleteMany({holder: {$in: [_id]}});
             await Lock.deleteMany({holder: {$in: [_id]}});

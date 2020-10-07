@@ -11,7 +11,7 @@ const PhysicalLocal = require("./models/PhysicalLocal");
     client.on( "connect", () => {
             client.subscribe( "checkAccess", (error) => {
                     if (error !== true){
-                            /*setTimeout
+                         /* setTimeout
                         (
                             () =>
                             {
@@ -21,8 +21,8 @@ const PhysicalLocal = require("./models/PhysicalLocal");
                                     JSON.stringify
                                     (
                                         {
-                                            _id: "5f446e2e91663ee6746084f9",
-                                            pin: "31FC.866V.7D9S-95"
+                                            _id: "5f6b91b5ceb7951a9c557621",
+                                            pin: "12345"
                                         }
                                     )
                                 );
@@ -46,6 +46,7 @@ const PhysicalLocal = require("./models/PhysicalLocal");
             if (user !== null)
             {
                 const lock = await Lock.findById(_id);
+                console.log(_id, pin, user);
                 const groups = await Group.find({_id: {$in: lock.holder}});
                 const physicalLocal = await PhysicalLocal.find({_id: lock.holderPhysicalLocal});
 
@@ -53,7 +54,6 @@ const PhysicalLocal = require("./models/PhysicalLocal");
                 
                 allGroups.push(...groups);
                 if(physicalLocal !== null || physicalLocal !== undefined ) allGroups.push(...physicalLocal);
-            
 
                 var holderNames = [];
                 var roleIds = [];
@@ -97,16 +97,14 @@ const PhysicalLocal = require("./models/PhysicalLocal");
                 }
 
                 if (usedTimes.length > 0){
-                    console.log(true);
-                    client.publish("respondAccess", _id+" true");
+                    console.log(true)
+                    client.publish(`respondAccess/${_id}`, "true");
                 } else {
-                    console.log(false);
-                    client.publish("respondAccess", "false");
+                    client.publish(`respondAccess/${_id}`, "false");
                 }
 
             } else {
-                console.log(false);
-                client.publish("respondAccess", "false");
+                client.publish(`respondAccess/${_id}`, "false");
             }
         }
     }

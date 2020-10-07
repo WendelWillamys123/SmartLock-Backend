@@ -144,23 +144,16 @@ module.exports = {
     },
 
     async destroy (request, response){
-        const {_id, Localtype="group"} = request.body;
+        const {_id} = request.headers;
         
         try{
-            if(Localtype==="group"){
                 const lock = await Lock.findByIdAndDelete(_id);
                 await Group.findOneAndUpdate({locks: {$in: [_id]}}, {$pullAll: {locks: [_id]}}, {new: true});
                 await Organization.findOneAndUpdate({locks: {$in: [_id]}}, {$pullAll: {locks: [_id]}}, {new: true});
-
-                return response.send({error: false, message: 'Lock deleted', Lock: `${lock.name}`});
-            } 
-            if(Localtype==="physicalLocal"){
-                const lock = await Lock.findByIdAndDelete(_id);
                 await PhysicalLocal.findOneAndUpdate({locks: {$in: [_id]}}, {$pullAll: {locks: [_id]}}, {new: true});
-                await Organization.findOneAndUpdate({locks: {$in: [_id]}}, {$pullAll: {locks: [_id]}}, {new: true});
             
                 return response.send({error: false, message: 'Lock deleted', Lock: `${lock.name}`});
-            }
+            
         } catch(error){
             return response.status(400).send({error: 'Failed delete locks'});
         }

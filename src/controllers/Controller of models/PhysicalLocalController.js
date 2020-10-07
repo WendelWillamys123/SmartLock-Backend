@@ -129,8 +129,9 @@ module.exports = {
     },    
 
     async destroy(request, response){
-        const {_id} = request.body;
+        const {_id} = request.headers;
     
+        console.log(_id);
         try{
             const physicalLocal = await PhysicalLocal.findByIdAndRemove(_id);
             await Group.findOneAndUpdate({physicalLocal: {$in: [_id]}}, {$pullAll: {physicalLocal: [_id]}}, {new: true});

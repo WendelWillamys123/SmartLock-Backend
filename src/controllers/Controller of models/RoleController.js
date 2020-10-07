@@ -51,7 +51,7 @@ module.exports = {
     },
 
     async show (request, response){
-        const {_id} = request.query;
+        const {_id} = request.headers;
 
         try{
             const role = await Role.findById(_id);
@@ -63,7 +63,8 @@ module.exports = {
 
     async update (request, response){
         const {_id, name, times} = request.body;
-        const {owner} = request.owner;
+
+        const owner = request.headers.owner;
         var newRole;
 
         try{
@@ -72,14 +73,14 @@ module.exports = {
             if (role !== null) {
                 if(name === role.name){
                     await Role.findByIdAndUpdate({_id: _id}, {name, times}, {new: true});
-                    return response.send({newRole});
+                    return response.send(newRole);
 
                 } else {
                     const exist = await Role.findOne({name, organization: owner});
 
                     if(exist===null){
-                        await Role.findByIdAndUpdate({_id: _id}, {name, times}, {new: true});
-                        return response.send({newRole});
+                        newRole = await Role.findByIdAndUpdate({_id: _id}, {name, times}, {new: true});
+                        return response.send(newRole);
 
                     } else return response.status(400).send({error: 'A role with name informed already exist'});
                 }
@@ -91,8 +92,43 @@ module.exports = {
         }
     },
 
+    async newShedule (request, response){
+        const {_id, time} = request.body;
+
+        const owner = request.headers.owner;
+        var newRole;
+
+        try{
+            const role = await Role.findById(_id);
+
+            if (role !== null) {
+
+                var exist = false;
+
+                role.times.map(tm => {
+                    if(tm.name === time.name){
+                        exist = true
+                    }
+                })
+
+                if(exist === false){
+                    var newTime = role.times;
+                    newTime.push(time);
+
+                    newRole = await Role.findByIdAndUpdate({_id: _id}, {times: newTime}, {new: true});
+                    console.log(newRole)
+                    return response.send(newRole);
+                }
+            
+            } else  return response.status(400).send({error: 'Role not found'})    
+           
+        } catch(error){
+            return response.status(400).send({error: 'Add a new shedule failed'})
+        }
+    },
+
     async destroy (request, response){
-        const {_id} = request.body;
+        const {_id} = request.headers;
         try{
             const role = await Role.findByIdAndDelete(_id);
             await Organization.findByIdAndUpdate({ _id: role.organization}, {$pullAll: {roles: [role._id]}}, {new: true})
