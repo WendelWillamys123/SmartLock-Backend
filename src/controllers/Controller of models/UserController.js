@@ -1,6 +1,7 @@
 const User = require('../../models/User');
 const Organization = require('../../models/Organization');
 const Admin = require('../../models/Admin');
+const Role = require('../../models/Role');
 
 module.exports = {
     async store(request, response){ 
@@ -112,6 +113,27 @@ module.exports = {
         } catch(error){
             console.log(error)
             return response.status(400).send({error: 'Update of user data failed'})
+        }
+    },
+
+    async removeRole(request, response){
+        const {roleID, _id} = request.body;
+        var index = null;
+
+        try{
+            const role = await Role.findById(roleID);
+            var user = await User.findById(_id);
+
+            if(role!==null){
+                if(user!==null){
+                    index = user.roles.indexOf(roleID)
+                    user.roles.splice(index, 1)
+                    await User.findByIdAndUpdate(_id, {roles: user.roles}, {new:true});
+                    return response.send({error: false, message: `The ${role.name} role has been removed from the ${user.name} user`})
+                }
+            }
+        } catch(error){
+            return response.status(400).send({error: 'Remove role fails'})
         }
     },
 

@@ -3,6 +3,7 @@ const Lock = require ("../../models/Lock");
 const Group = require ("../../models/Group");
 const PhysicalLocal = require ("../../models/PhysicalLocal");
 const Organization = require("../../models/Organization");
+const Role = require("../../models/Role");
 
 module.exports = {
 
@@ -140,6 +141,27 @@ module.exports = {
 
         } catch(error){
             return response.status(400).send({error: 'Update of lock data failed'});
+        }
+    },
+
+    async removeRole(request, response){
+        const {roleID, _id} = request.body;
+        var index = null;
+
+        try{
+            const role = await Role.findById(roleID);
+            var lock = await Lock.findById(_id);
+
+            if(role!==null){
+                if(lock!==null){
+                    index = lock.roles.indexOf(roleID)
+                    lock.roles.splice(index, 1)
+                    await Lock.findByIdAndUpdate(_id, {roles: lock.roles}, {new:true});
+                    return response.send({error: false, message: `The ${role.name} role has been removed from the ${lock.name} lock`})
+                }
+            }
+        } catch(error){
+            return response.status(400).send({error: 'Remove role fails'})
         }
     },
 

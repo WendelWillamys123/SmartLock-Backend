@@ -26,6 +26,7 @@ routes.get('/users/search', UserController.show);
 routes.get('/users', UserController.index);
 routes.put('/users/update', UserController.update);
 routes.delete('/users/delete', UserController.destroy);
+routes.put('/users/removeRole', UserController.removeRole);
 
 //Routes of groups
 
@@ -35,6 +36,7 @@ routes.get('/groups/search/name', GroupController.findName);
 routes.get('/groups', GroupController.index);
 routes.put('/groups/update', GroupController.update);
 routes.delete('/groups/delete', GroupController.destroy);
+routes.put('/groups/removeRole', GroupController.removeRole);
 
 //Routes of locks
 
@@ -44,6 +46,7 @@ routes.get('/locks/search/name', LockController.findName);
 routes.get('/locks', LockController.index);
 routes.put('/locks/update', LockController.update);
 routes.delete('/locks/delete', LockController.destroy);
+routes.put('/locks/removeRole', LockController.removeRole);
 
 //Routes of physical local
 
@@ -53,7 +56,7 @@ routes.get('/physicalLocals/search/name', PhysicalLocalController.findName);
 routes.get('/physicalLocals', PhysicalLocalController.index);
 routes.put('/physicalLocals/update', PhysicalLocalController.update);
 routes.delete('/physicalLocals/delete', PhysicalLocalController.destroy);
-
+routes.put('/physicalLocals/removeRole', PhysicalLocalController.removeRole);
 
 //Rotes of roles
 

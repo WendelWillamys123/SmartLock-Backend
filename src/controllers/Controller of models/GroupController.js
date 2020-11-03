@@ -3,6 +3,7 @@ const Group = require('../../models/Group');
 const Lock = require('../../models/Lock');
 const PhysicalLocal = require('../../models/PhysicalLocal');
 const Organization = require('../../models/Organization'); 
+const Role = require('../../models/Role');
 
 module.exports = {
 
@@ -226,19 +227,39 @@ module.exports = {
                 });
 
                     if (exists===false) {
-                        group = await Group.findByIdAndUpdate(_id, {name, groups, locks, physicalLocal, roles}, {new: true});
+                        group = await Group.findByIdAndUpdate(_id, {name}, {new: true});
                         return response.send({group});
     
-                   } else return response.status(400).send({error: 'A group with email informed already exist'})
+                   } else return response.status(400).send({error: 'A group with name informed already exist'})
                 } else {
-                    group = await Group.findByIdAndUpdate(_id, {name, groups, locks, physicalLocal, roles}, {new: true});
+                    group = await Group.findByIdAndUpdate(_id, {name}, {new: true});
                     return response.send({group});
                 } 
             }
             
         } catch(error){
-            console.log(error)
             return response.status(400).send({error: 'Update of group data failed'})
+        }
+    },
+
+    async removeRole(request, response){
+        const {roleID, _id} = request.body;
+        var index = null;
+
+        try{
+            const role = await Role.findById(roleID);
+            var group = await Group.findById(_id);
+
+            if(role!==null){
+                if(group!==null){
+                    index = group.roles.indexOf(roleID)
+                    group.roles.splice(index, 1)
+                    await Group.findByIdAndUpdate(_id, {roles: group.roles}, {new:true});
+                    return response.send({error: false, message: `The ${role.name} role has been removed from the ${group.name} group`})
+                }
+            }
+        } catch(error){
+            return response.status(400).send({error: 'Remove role fails'})
         }
     },
 
