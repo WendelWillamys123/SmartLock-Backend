@@ -118,7 +118,7 @@ module.exports = {
                     newTime.push(time);
 
                     newRole = await Role.findByIdAndUpdate({_id: _id}, {times: newTime}, {new: true});
-                    console.log(newRole)
+
                     return response.send(newRole);
                 }
             

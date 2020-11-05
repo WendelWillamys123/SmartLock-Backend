@@ -11,7 +11,7 @@ const PhysicalLocal = require("./models/PhysicalLocal");
     client.on( "connect", () => {
             client.subscribe( "checkAccess", (error) => {
                     if (error !== true){
-                          setTimeout
+                        /*  setTimeout
                         (
                             () =>
                             {
@@ -28,7 +28,7 @@ const PhysicalLocal = require("./models/PhysicalLocal");
                                 );
                             },
                             2000
-                        );
+                        );*/
                     }
                     
                 });
@@ -36,9 +36,14 @@ const PhysicalLocal = require("./models/PhysicalLocal");
 
     client.on("message", async (topic, message) => {
         
+        
+
         if (topic === "checkAccess"){
            
             message = JSON.parse(message);
+
+            console.log(message);
+            
             const _id = message._id;
             const pin = message.pin;
             const user = await User.findOne({pins: pin});
@@ -66,18 +71,24 @@ const PhysicalLocal = require("./models/PhysicalLocal");
                         }
                     });
                 });
+                
+                var usedTimes = [];
+                var usedRoles = [];
+
+                console.log(roleIds);
+                console.log("-------------------------");
+                console.log(user.roles);
+
 
                 if (roleIds.length !== 0 && user.roles.some ((value) => roleIds.indexOf(value.toString()) >= 0)) {
                     var currentTime = new Date;
+                    
                     currentTime = {
                         hour: (currentTime.getHours ()*60)+currentTime.getMinutes (),
                         day: currentTime.getDay()
                     };
 
                     const roles = await Role.find({_id: {$in: roleIds}});
-                    
-                    var usedTimes = [];
-                    var usedRoles = [];
                     
                     
                     roles.map((role) => {
