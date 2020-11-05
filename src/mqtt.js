@@ -11,7 +11,7 @@ const PhysicalLocal = require("./models/PhysicalLocal");
     client.on( "connect", () => {
             client.subscribe( "checkAccess", (error) => {
                     if (error !== true){
-                         /* setTimeout
+                          setTimeout
                         (
                             () =>
                             {
@@ -21,14 +21,14 @@ const PhysicalLocal = require("./models/PhysicalLocal");
                                     JSON.stringify
                                     (
                                         {
-                                            _id: "5f6b91b5ceb7951a9c557621",
+                                            _id: "5fa45f8cd6dbe745d44c5286",
                                             pin: "12345"
                                         }
                                     )
                                 );
                             },
                             2000
-                        );*/
+                        );
                     }
                     
                 });
@@ -46,7 +46,6 @@ const PhysicalLocal = require("./models/PhysicalLocal");
             if (user !== null)
             {
                 const lock = await Lock.findById(_id);
-                console.log(_id, pin, user);
                 const groups = await Group.find({_id: {$in: lock.holder}});
                 const physicalLocal = await PhysicalLocal.find({_id: lock.holderPhysicalLocal});
 
@@ -83,7 +82,6 @@ const PhysicalLocal = require("./models/PhysicalLocal");
                     
                     roles.map((role) => {
                         role.times.map((time) => {
-                            
                             var start = (time.start.hours*60)+time.start.minutes;
                             var end = (time.end.hours*60)+time.end.minutes;
 
@@ -96,8 +94,10 @@ const PhysicalLocal = require("./models/PhysicalLocal");
                     });
                 }
 
+                
+
                 if (usedTimes.length > 0){
-                    console.log(true)
+                    console.log(user.name+" accessed the " + lock.name + " lock")
                     client.publish(`respondAccess/${_id}`, "true");
                 } else {
                     client.publish(`respondAccess/${_id}`, "false");

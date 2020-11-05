@@ -63,6 +63,7 @@ module.exports = {
 
     async update (request, response){
         const {_id, name, times} = request.body;
+        console.log(times);
 
         const owner = request.headers.owner;
         var newRole;
@@ -72,7 +73,7 @@ module.exports = {
 
             if (role !== null) {
                 if(name === role.name){
-                    await Role.findByIdAndUpdate({_id: _id}, {name, times}, {new: true});
+                    newRole = await Role.findByIdAndUpdate({_id: _id}, {name: name, times: times}, {new: true});
                     return response.send(newRole);
 
                 } else {
@@ -80,6 +81,7 @@ module.exports = {
 
                     if(exist===null){
                         newRole = await Role.findByIdAndUpdate({_id: _id}, {name, times}, {new: true});
+                        console.log(newRole);
                         return response.send(newRole);
 
                     } else return response.status(400).send({error: 'A role with name informed already exist'});
