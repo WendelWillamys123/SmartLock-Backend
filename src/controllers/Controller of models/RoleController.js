@@ -233,6 +233,7 @@ module.exports = {
                     } 
 
                     if(exist === false){
+                        if(toWhom.roles === null) toWhom.roles = [];
                         toWhom.roles.push(_id)
                         await User.findByIdAndUpdate({_id: toWhom._id}, {roles: toWhom.roles}, {new: true});
                         return response.send({error: false, message: `User ${toWhom.name} received the role ${role.name}`})    

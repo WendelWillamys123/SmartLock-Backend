@@ -91,6 +91,19 @@ module.exports = {
         }
     },
 
+    async findName (request, response){
+        const {name, owner} = request.headers;
+                
+        try{
+            const data = await User.find({organization: owner});
+            const users = data.filter( user =>  (user.name.includes(name)));
+            return response.send(users);
+
+        } catch(error){
+            return response.status(400).send({error: 'User(s) not found'});
+        }
+    },
+
     async update(request, response){
         const {_id, name, email, pins, registry, roles} = request.body;
 

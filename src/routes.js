@@ -23,6 +23,7 @@ routes.delete('/admins/delete', AdminController.destroy);
 
 routes.post('/users/create', UserController.store);
 routes.get('/users/search', UserController.show);
+routes.get('/users/search/name', UserController.findName);
 routes.get('/users', UserController.index);
 routes.put('/users/update', UserController.update);
 routes.delete('/users/delete', UserController.destroy);
