@@ -144,31 +144,101 @@ module.exports = {
     async assign(request, response){
         const {_id, componentID, type} = request.body;
 
+
         try {
             const role = await Role.findById(_id);
             if(role!==null){
-              
+               
                 if(type === "groups"){
-                    const toWhom = await Group.findByIdAndUpdate({_id: componentID}, { $push: {roles: role._id}}, {new: true});
-                    await Group.updateMany({holder: {$in: [componentID]}}, { $push: {roles: role}}, {new: true});
-                    await Lock.updateMany({holder: {$in: [componentID]}}, { $push: {roles: role}}, {new: true});
-                    await PhysicalLocal.updateMany ({holder: {$in: [componentID]}}, { $push: {roles: role}}, {new: true});
+                    const toWhom = await Group.findById(componentID);
+                    var exist = false;
+                    
+                    if(toWhom.roles !== null){
+                        if(toWhom.roles !== undefined){
+                            toWhom.roles.map(role =>{
+                                if(role.toString() === _id.toString()) exist = true
+                            })
+                        }
+                    }
+
+                    if(exist === false){
+                    await Group.findByIdAndUpdate({_id: componentID}, { $push: {roles: role._id}}, {new: true});
+                    await Group.updateMany({holder: {$in: [componentID]}}, { $push: {roles: role._id}}, {new: true});
+                    await Lock.updateMany({holder: {$in: [componentID]}}, { $push: {roles: role._id}}, {new: true});
+                    await PhysicalLocal.updateMany ({holder: {$in: [componentID]}}, { $push: {roles: role._id}}, {new: true});
                     return response.send({error: false, message: `The ${toWhom.name} group received the role ${role.name} and its components also inherited it`})
+                    } 
+                    
+                    else return response.status(400).send({error: 'The group in question already has this role'})
+
+                    
                 }
                 if(type === "physicalLocal"){
-                    const toWhom = await PhysicalLocal.findByIdAndUpdate({_id: componentID}, { $push: {roles: role._id}}, {new: true});
-                    await Group.updateMany({holder: {$in: [componentID]}}, { $push: {roles: role}}, {new: true});
-                    await Lock.updateMany({holder: {$in: [componentID]}}, { $push: {roles: role}}, {new: true});
-                    return response.send({error: false, message: `The ${toWhom.name} physical local received the role ${role.name} and its components also inherited it`})   
+
+                    const toWhom = await PhysicalLocal.findById(componentID);
+                    var exist = false;
+
+                    if(toWhom.roles !== null){
+                        if(toWhom.roles !== undefined){
+                            toWhom.roles.map(role =>{
+                                if(role.toString() === _id.toString()) exist = true
+                            })
+                        }
+                    }
+
+                    if(exist === false){
+                        await PhysicalLocal.findByIdAndUpdate({_id: componentID}, { $push: {roles: role._id}}, {new: true});
+                        await Group.updateMany({holder: {$in: [componentID]}}, { $push: {roles: role._id}}, {new: true});
+                        await Lock.updateMany({holder: {$in: [componentID]}}, { $push: {roles: role._id}}, {new: true});
+                        return response.send({error: false, message: `The ${toWhom.name} physical local received the role ${role.name} and its components also inherited it`})   
+                    } 
+                    
+                    else return response.status(400).send({error: 'The physical local in question already has this role'});
                 }
                 if(type === "locks"){
-                    const toWhom = await Lock.findByIdAndUpdate({_id: componentID}, { $push: {roles: role._id}}, {new: true});
-                    return response.send({error: false, message: `The ${toWhom.name} lock received the role ${role.name}`})   
+
+                    const toWhom = await Lock.findById(componentID);
+                    var exist = false;
+
+                    if(toWhom.roles !== null){
+                        if(toWhom.roles !== undefined){
+                            toWhom.roles.map(role =>{
+                                if(role.toString() === _id.toString()) exist = true
+                            })
+                        }
+                    }
+
+                    if(exist === false){
+                        await Lock.findByIdAndUpdate({_id: componentID}, { $push: {roles: role._id}}, {new: true});
+                        return response.send({error: false, message: `The ${toWhom.name} lock received the role ${role.name}`})
+                    } 
+                    
+                    else return response.status(400).send({error: 'The lock in question already has this role'})
+
+                       
                 }
                 if(type === "users"){
-                    const toWhom = await User.findByIdAndUpdate({_id: componentID}, { $push: {roles: role._id}}, {new: true});
-                    console.log(toWhom);
-                    return response.send({error: false, message: `User ${toWhom.name} received the role ${role.name}`})    
+
+                    const toWhom = await User.findById(componentID);
+                    var exist = false;
+
+                    
+
+                    if(toWhom.roles !== undefined){
+                        if(toWhom.roles !== null){
+                            toWhom.roles.map(role =>{
+                                if(role.toString() === _id.toString()) exist = true
+                            })
+                        } 
+                    } 
+
+                    if(exist === false){
+                        toWhom.roles.push(_id)
+                        await User.findByIdAndUpdate({_id: toWhom._id}, {roles: toWhom.roles}, {new: true});
+                        return response.send({error: false, message: `User ${toWhom.name} received the role ${role.name}`})    
+                    }  else return response.status(400).send({error: 'The user in question already has this role'})
+
+                   
                 }
         }else return response.status(400).send({error: true, message: "Role not found"})
             
